@@ -1,0 +1,1 @@
+GUI for controlling motor and getting data from it
