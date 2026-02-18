@@ -1,6 +1,6 @@
 """
-Simple GUI using Tkinter that shows the encoder, velocity, and torque data as graphs
-Can control the motor by sending desired velocities, angles (in rad), and torque via serial.
+Simple GUI using Tkinter that shows encoder, velocity, and torque data as graphs and allows Kp (position) and Kd (velocity) tuning
+Can control the motor by sending desired velocities, angles (in rad), and desired torque via serial.
 """
 
 import serial
@@ -17,10 +17,12 @@ BAUD = 115200
 MAX_POINTS = 300
 
 ser = serial.Serial(PORT, BAUD, timeout=1)
+ser.write(b'm')
 
 angle_data = deque([0]*MAX_POINTS, maxlen=MAX_POINTS)
 vel_data   = deque([0]*MAX_POINTS, maxlen=MAX_POINTS)
 torque_data = deque([0]*MAX_POINTS, maxlen=MAX_POINTS)
+#kp_data = deque([0]*MAX_POINTS, maxlen=MAX_POINTS) TODO: maybe get Kp and Kd data and put it on something to viz
 
 def serial_reader():
     while ser.is_open:
@@ -38,6 +40,8 @@ def serial_reader():
             angle = float(parts[1])
             vel = float(parts[2])
             torque = float(parts[3])
+            #kp = float(parts[4])
+            #kd = float(parts[5])
 
             angle_data.append(angle)
             vel_data.append(vel)
@@ -65,7 +69,7 @@ ax[1].set_ylim(0, 30)
 
 line_torque, = ax[2].plot(torque_data)
 ax[2].set_title("Torque")
-ax[2].set_ylim(0, 10)
+ax[2].set_ylim(0, 30)
 
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -73,31 +77,46 @@ canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 def update_plot(frame):
     line_angle.set_ydata(angle_data)
     line_vel.set_ydata(vel_data)
-    return line_angle, line_vel
+    line_torque.set_ydata(torque_data)
+    return line_angle, line_vel, line_torque
 
 ani = animation.FuncAnimation(fig, update_plot, interval=50)
 
 # COMMAND FUNCS
 def send_velocity():
-    ser.write(b'm')
+    #ser.write(b'm')
     value=vel_slider.get()
     cmd = f"v{value}\r"
     ser.write(cmd.encode())
 
 def send_position():
-    ser.write(b'm')
+    #ser.write(b'm')
     value = pos_entry.get()
     cmd = f"p{value}\r"
     ser.write(cmd.encode())
 
 def send_torque():
-    ser.write(b'm')
+    #ser.write(b'm')
     value = torque_entry.get()
     cmd = f"q{value}\r"
     ser.write(cmd.encode())
 
+def send_kp():
+    #ser.write(b'm')
+    value = kp_entry.get()
+    cmd = f"u{value}\r"
+    ser.write(cmd.encode())
+
+def send_kd():
+    #ser.write(b'm')
+    value = kd_entry.get()
+    cmd = f"d{value}\r"
+    ser.write(cmd.encode())
+
 def stop_motor():
-    ser.write(b'\x1b') # esc key
+    #ser.write(b'\x1b') # esc key
+    cmd = f"v0\r"
+    ser.write(cmd.encode())
 
 # tk controls
 control_frame = tk.Frame(root)
@@ -113,12 +132,21 @@ pos_entry = tk.Entry(control_frame)
 pos_entry.grid(row=1, column=1)
 tk.Button(control_frame, bg='lightblue', text="Move", command=send_position).grid(row=1, column=3)
 
-tk.Label(control_frame, text="Torque (I_Q_des)", font=("Arial", 13, "bold")).grid(row=2, column=0)
+tk.Label(control_frame, text="Torque (t_ff)", font=("Arial", 13, "bold")).grid(row=2, column=0)
 torque_entry = tk.Entry(control_frame)
 torque_entry.grid(row=2, column=1)
 tk.Button(control_frame, bg='lightblue', text="Set", command=send_torque).grid(row=2, column=3)
 
-tk.Button(control_frame, text="STOP", bg="red", command=stop_motor)\
-    .grid(row=3, column=0, columnspan=3)
+tk.Label(control_frame, text="Kp (0 init)", font=("Arial", 13, "bold")).grid(row=3, column=0)
+kp_entry = tk.Entry(control_frame)
+kp_entry.grid(row=3, column=1)
+tk.Button(control_frame, bg='lightblue', text="Set", command=send_kp).grid(row=3, column=3)
+
+tk.Label(control_frame, text="Kd (0 init)", font=("Arial", 13, "bold")).grid(row=4, column=0)
+kd_entry = tk.Entry(control_frame)
+kd_entry.grid(row=4, column=1)
+tk.Button(control_frame, bg='lightblue', text="Set", command=send_kd).grid(row=4, column=3)
+
+tk.Button(control_frame, text="STOP", bg="red", command=stop_motor).grid(row=5, column=0, columnspan=3)
 
 root.mainloop()

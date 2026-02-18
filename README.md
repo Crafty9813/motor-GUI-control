@@ -1,1 +1,1 @@
-GUI for controlling motor and getting data from it
+GUI for controlling motor and getting/setting position, velocity, and desired torque in real time.
