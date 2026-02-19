@@ -1,1 +1,1 @@
-GUI for controlling motor and getting/setting position, velocity, and desired torque in real time.
+Little GUI for controlling motor and getting/setting position, velocity, and desired torque in real time. Kp (position) and Kd (velocity) tuning available.

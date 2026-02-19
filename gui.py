@@ -6,6 +6,7 @@ Can control the motor by sending desired velocities, angles (in rad), and desire
 import serial
 import threading
 import tkinter as tk
+#from tkinter import ttk
 from collections import deque
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -122,31 +123,31 @@ def stop_motor():
 control_frame = tk.Frame(root)
 control_frame.pack()
 
-tk.Label(control_frame, text="Velocity", font=("Arial", 13, "bold")).grid(row=0, column=0)
-vel_slider = tk.Scale(control_frame, from_=0, to=30, orient=tk.HORIZONTAL)
+tk.Label(control_frame, text="Velocity", font=("Arial", 21, "bold")).grid(row=0, column=0, sticky="news")
+vel_slider = tk.Scale(control_frame, font=("Arial", 12, "bold"), from_=0, to=30, orient=tk.HORIZONTAL, width=25)
 vel_slider.grid(row=0, column=1, columnspan=2, sticky="we")
-tk.Button(control_frame, bg='lightblue', text="Set", command=send_velocity).grid(row=0, column=3)
+tk.Button(control_frame, bg='lightblue', text="Set", font= ("Times", 18, "bold"), command=send_velocity).grid(row=0, column=3)
 
-tk.Label(control_frame, text="Position", font=("Arial", 13, "bold")).grid(row=1, column=0)
-pos_entry = tk.Entry(control_frame)
+tk.Label(control_frame, text="Position", font=("Arial", 21, "bold")).grid(row=1, column=0)
+pos_entry = tk.Entry(control_frame, font=("Times New Roman", 18))
 pos_entry.grid(row=1, column=1)
-tk.Button(control_frame, bg='lightblue', text="Move", command=send_position).grid(row=1, column=3)
+tk.Button(control_frame, bg='lightblue', text="Move", font= ("Times", 18, "bold"), command=send_position).grid(row=1, column=3)
 
-tk.Label(control_frame, text="Torque (t_ff)", font=("Arial", 13, "bold")).grid(row=2, column=0)
-torque_entry = tk.Entry(control_frame)
+tk.Label(control_frame, text="Torque (t_ff)", font=("Arial", 21, "bold")).grid(row=2, column=0)
+torque_entry = tk.Entry(control_frame, font=("Times New Roman", 18))
 torque_entry.grid(row=2, column=1)
-tk.Button(control_frame, bg='lightblue', text="Set", command=send_torque).grid(row=2, column=3)
+tk.Button(control_frame, bg='lightblue', text="Set", font= ("Times", 18, "bold"), command=send_torque).grid(row=2, column=3)
 
-tk.Label(control_frame, text="Kp (0 init)", font=("Arial", 13, "bold")).grid(row=3, column=0)
-kp_entry = tk.Entry(control_frame)
+tk.Label(control_frame, text="Kp (0 init)", font=("Arial", 21, "bold")).grid(row=3, column=0)
+kp_entry = tk.Entry(control_frame, font=("Times New Roman", 18))
 kp_entry.grid(row=3, column=1)
-tk.Button(control_frame, bg='lightblue', text="Set", command=send_kp).grid(row=3, column=3)
+tk.Button(control_frame, bg='lightblue', text="Set", font= ("Times", 18, "bold"), command=send_kp).grid(row=3, column=3)
 
-tk.Label(control_frame, text="Kd (0 init)", font=("Arial", 13, "bold")).grid(row=4, column=0)
-kd_entry = tk.Entry(control_frame)
+tk.Label(control_frame, text="Kd (0 init)", font=("Arial", 21, "bold")).grid(row=4, column=0)
+kd_entry = tk.Entry(control_frame, font=("Times New Roman", 18))
 kd_entry.grid(row=4, column=1)
-tk.Button(control_frame, bg='lightblue', text="Set", command=send_kd).grid(row=4, column=3)
+tk.Button(control_frame, bg='lightblue', text="Set", font= ("Times", 18, "bold"), command=send_kd).grid(row=4, column=3)
 
-tk.Button(control_frame, text="STOP", bg="red", command=stop_motor).grid(row=5, column=0, columnspan=3)
+tk.Button(control_frame, text="STOP", bg="red", font= ("Times", 18, "bold"), command=stop_motor).grid(row=5, column=1)
 
 root.mainloop()
