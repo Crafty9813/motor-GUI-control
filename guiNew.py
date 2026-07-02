@@ -148,12 +148,14 @@ class MotorControlGUI(QMainWindow):
         self.pos_plot = self.plot_widget.addPlot(title="Position (rad)", row=0, col=0)
         self.pos_plot.setLabel('bottom', 'Time', units='s')
         self.pos_plot.setLabel('left', 'Position', units='rad')
+        self.pos_plot.getAxis('left').enableAutoSIPrefix(False) # Fixes to rad
         self.pos_curve = self.pos_plot.plot(pen=pg.mkPen('cyan', width=2))
 
         # Velocity plot
         self.vel_plot = self.plot_widget.addPlot(title="Velocity (rad/s)", row=0, col=1)
         self.vel_plot.setLabel('bottom', 'Time', units='s')
         self.vel_plot.setLabel('left', 'Velocity', units='rad/s')
+        self.vel_plot.getAxis('left').enableAutoSIPrefix(False) # Fixes to rad
         self.vel_curve = self.vel_plot.plot(pen=pg.mkPen('lime', width=2))
 
         # Torque plot
@@ -185,6 +187,11 @@ class MotorControlGUI(QMainWindow):
         self.plot_timer.timeout.connect(self.update_plots)
         self.plot_timer.start(100)  # Update every 100ms
 
+        # Timer for automatic periodic command sending (poll/control loop)
+        self.auto_send_timer = QTimer()
+        self.auto_send_timer.timeout.connect(self.auto_send_command)
+        self.auto_send_timer.setInterval(5)
+
     def connect_serial(self):
         try:
             self.serial = Serial(self.port, self.baudrate, timeout=0.1)
@@ -204,7 +211,12 @@ class MotorControlGUI(QMainWindow):
 
         while self.running:
             try:
-                raw_data = self.serial.read(self.serial.in_waiting)
+                n = self.serial.in_waiting
+                if not n:
+                    time.sleep(0.01)
+                    continue
+
+                raw_data = self.serial.read(n)
                 if raw_data and len(raw_data) > 9:
                     can_data = raw_data[7:-2]
                     if len(can_data) >= 8:
@@ -223,7 +235,7 @@ class MotorControlGUI(QMainWindow):
                                 'vbus': vbus,
                                 'temp': temp
                             })
-                time.sleep(0.01)
+                time.sleep(0.005)
             except Exception as e:
                 print(f"Read error: {e}")
 
@@ -257,10 +269,34 @@ class MotorControlGUI(QMainWindow):
             data_hex = " ".join(f"{b:02X}" for b in command_bytes)
             serial_cmd = mit_func.can2serial(can_id, data_hex)
 
-            self.serial.write(serial_cmd)
+            if self.serial:
+                self.serial.write(serial_cmd)
             self.status_label.setText(f"Command sent: p={position:.2f}, kp={kp:.1f}, kd={kd:.2f}")
         except Exception as e:
             self.status_label.setText(f"Error: {e}")
+
+    def auto_send_command(self):
+        """Send the current command periodically to poll the motor / run the control loop.
+        This elicits regular status replies for plotting and keeps the controller fed.
+        """
+        try:
+            if not self.serial:
+                return
+
+            can_id = self.can_id_input.text()
+            position = self.position_input.value()
+            velocity = self.velocity_input.value()
+            kp = self.kp_input.value()
+            kd = self.kd_input.value()
+            t_ff = self.torque_input.value()
+
+            command_bytes = mit_func.pack_cmd(p=position, v=velocity, kp=kp, kd=kd, t_ff=t_ff)
+            data_hex = " ".join(f"{b:02X}" for b in command_bytes)
+            serial_cmd = mit_func.can2serial(can_id, data_hex)
+
+            self.serial.write(serial_cmd)
+        except Exception:
+            pass
 
     def set_mit_mode(self):
         try:
@@ -270,7 +306,12 @@ class MotorControlGUI(QMainWindow):
             self.serial.write(mode_serial)
             self.status_label.setText("MIT Mode enabled")
             time.sleep(0.05)
-            self.serial.read(self.serial.in_waiting)  # clear buffer
+            self.serial.read(self.serial.in_waiting) # Clear buffer
+            # Start periodic auto-send so we get regular replies for plotting
+            try:
+                self.auto_send_timer.start()
+            except Exception:
+                pass
         except Exception as e:
             self.status_label.setText(f"Error: {e}")
 
@@ -282,7 +323,12 @@ class MotorControlGUI(QMainWindow):
             self.serial.write(mode_serial)
             self.status_label.setText("MENU Mode enabled (motor disabled)")
             time.sleep(0.05)
-            self.serial.read(self.serial.in_waiting)  # clear buffer
+            self.serial.read(self.serial.in_waiting) # Clear buffer
+            # Stop periodic auto-send when motor is disabled
+            try:
+                self.auto_send_timer.stop()
+            except Exception:
+                pass
         except Exception as e:
             self.status_label.setText(f"Error: {e}")
 
