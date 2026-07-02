@@ -13,7 +13,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.animation as animation
 import math
 
-PORT = '/dev/ttyACM0'
+PORT = '/dev/ttyUSB0'
 BAUD = 115200
 MAX_POINTS = 300
 
