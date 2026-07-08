@@ -110,6 +110,10 @@ class MotorControlGUI(QMainWindow):
         self.mit_mode_btn.clicked.connect(self.set_mit_mode)
         mode_layout.addWidget(self.mit_mode_btn)
 
+        self.calibration_mode_btn = QPushButton("Enable Calibration Mode")
+        self.calibration_mode_btn.clicked.connect(self.set_calibration_mode)
+        mode_layout.addWidget(self.calibration_mode_btn)
+
         self.menu_mode_btn = QPushButton("Disable (MENU Mode)")
         self.menu_mode_btn.clicked.connect(self.set_menu_mode)
         mode_layout.addWidget(self.menu_mode_btn)
@@ -312,6 +316,18 @@ class MotorControlGUI(QMainWindow):
                 self.auto_send_timer.start()
             except Exception:
                 pass
+        except Exception as e:
+            self.status_label.setText(f"Error: {e}")
+
+    def set_calibration_mode(self):
+        try:
+            mode = mit_func.CALIBRATION_MODE
+            mode_data = f"FF FF FF FF FF FF FF {mode:02X}"
+            mode_serial = mit_func.can2serial("00000001", mode_data)
+            self.serial.write(mode_serial)
+            self.status_label.setText("Calibration Mode enabled")
+            time.sleep(0.05)
+            self.serial.read(self.serial.in_waiting)  # Clear buffer
         except Exception as e:
             self.status_label.setText(f"Error: {e}")
 

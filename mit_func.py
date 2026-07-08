@@ -1,6 +1,7 @@
 
 # ── Mode bytes (must match foc.h) ────────────────────────────────────────────
 MENU_MODE = 0
+CALIBRATION_MODE = 1
 MIT_MODE  = 2
 
 # ── Scaling ranges — must match flash-stored values on the motor ─────────────
