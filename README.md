@@ -3,3 +3,5 @@ Little GUI for controlling motor and getting/setting position, velocity, and des
 [![Thumbnail link](https://img.youtube.com/vi/nOIj7djkZ4M/0.jpg)](https://www.youtube.com/watch?v=nOIj7djkZ4M)
 
 STM32 code is here: https://github.com/ShangqunYu/DashMotorControl/tree/Testing
+
+New: https://github.com/ShangqunYu/DashMotorControl/tree/main/SimonMotor
